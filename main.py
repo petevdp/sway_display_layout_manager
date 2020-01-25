@@ -56,7 +56,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='save and set sway output configurations')
 
-    parser.add_argument('name', type=str, help="choose a configuration")
+    parser.add_argument('-c', type=str, metavar='NAME',
+                        help="choose a configuration")
 
     parser.add_argument('-s',
                         metavar='NAME',
@@ -80,8 +81,8 @@ if __name__ == "__main__":
     if arg_name == 's':
         filename = arg
         save_config(filename)
-        print(f"current configuration saved as {filename})")
-    if arg_name == 'name':
+        print(f"current configuration saved as {filename}")
+    elif arg_name == 'c':
         config_name = arg
         run_config(config_name)
     else:
