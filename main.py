@@ -17,6 +17,30 @@ def list_configs():
 
 
 def save_config(filename):
+    file_path = os.path.join(CONFIG_DIR, filename)
+    if not os.path.exists(file_path):
+        return write_config(filename)
+
+    while True:
+        overwrite_response = input(
+            f"A configuration with name {filename} already exists. overwrite?(y/n): ")
+
+        if overwrite_response in ['y', 'Y']:
+            return write_config(filename)
+
+        if overwrite_response in ['n', 'N']:
+            new_filename = input("new filename: ")
+            if new_filename == filename:
+                continue
+            return write_config(new_filename)
+
+
+"""
+actually save the config to disk
+"""
+
+
+def write_config(filename):
     commands = gen_output_pos_config_from_current_position()
     command_lines = '\n'.join(commands)
 
@@ -30,6 +54,7 @@ def save_config(filename):
         f.write(script_contents)
 
     os.system(f'chmod +x {file_path}')
+    print(f"current configuration saved as {filename}")
 
 
 def run_config(config_name):
@@ -88,7 +113,6 @@ def main():
     if arg_name == 's':
         filename = arg
         save_config(filename)
-        print(f"current configuration saved as {filename}")
     elif arg_name == 'c':
         config_name = arg
         run_config(config_name)
