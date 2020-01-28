@@ -10,6 +10,12 @@ CONFIG_DIR = "/home/pete/.config/screen_layouts"
 SHELL_PATH = "/usr/bin/sh"
 
 
+def list_configs():
+    configs = os.listdir(CONFIG_DIR)
+    for config in configs:
+        print(config)
+
+
 def save_config(filename):
     commands = gen_output_pos_config_from_current_position()
     command_lines = '\n'.join(commands)
@@ -52,9 +58,9 @@ def get_sway_outputs():
     return json.loads(output_str)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
-        description='save and set sway output configurations')
+        description='Save and set sway output configurations. Supply no arguments for a list of the current configurations')
 
     parser.add_argument('-c', type=str, metavar='NAME',
                         help="choose a configuration")
@@ -71,7 +77,8 @@ if __name__ == "__main__":
     arg_list = [a for a in vars(args).items() if a[1] != None]
 
     if len(arg_list) == 0:
-        raise "please supply an argument (-h for options)"
+        list_configs()
+        return
 
     if len(arg_list) > 1:
         raise "too many arguments!"
@@ -85,5 +92,11 @@ if __name__ == "__main__":
     elif arg_name == 'c':
         config_name = arg
         run_config(config_name)
+    elif arg_name == 'l':
+        list_configs()
     else:
         raise Exception(f"invalid flag {arg_name}")
+
+
+if __name__ == "__main__":
+    main()
