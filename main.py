@@ -2,6 +2,7 @@
 
 import subprocess
 import os
+import sys
 import json
 import argparse
 
@@ -35,11 +36,6 @@ def save_config(filename):
             return write_config(new_filename)
 
 
-"""
-actually save the config to disk
-"""
-
-
 def write_config(filename):
     commands = gen_output_pos_config_from_current_position()
     command_lines = '\n'.join(commands)
@@ -66,6 +62,16 @@ def run_config(config_name):
     os.system(script_path + " && echo \"success\"")
 
 
+def delete_config(config_name):
+    script_path = os.path.join(CONFIG_DIR, config_name)
+
+    if not os.path.exists(script_path):
+        raise Exception("configuration {config_name} does not exist")
+
+    os.remove(script_path)
+    print("success")
+
+
 def gen_output_pos_config_from_current_position():
     outputs = get_sway_outputs()
     return [get_pos_config_command_for_output(output) for output in outputs]
@@ -85,28 +91,30 @@ def get_sway_outputs():
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Save and set sway output configurations. Supply no arguments for a list of the current configurations')
-
-    parser.add_argument('-c', type=str, metavar='NAME',
-                        help="choose a configuration")
+        description='Save and set sway output configurations. Only provide one argument.')
 
     parser.add_argument('-s',
                         metavar='NAME',
                         type=str,
                         help="save the current screen layout configuration"
                         )
+    parser.add_argument('-c', type=str, metavar='NAME',
+                        help="choose a configuration")
+    parser.add_argument('-d', type=str, metavar='NAME')
+    parser.add_argument('-l', action='store_true', help="list current configs")
 
     args = parser.parse_args()
 
     # get the args being invoced
-    arg_list = [a for a in vars(args).items() if a[1] != None]
+    arg_list = [a for a in vars(args).items() if a[1]]
 
     if len(arg_list) == 0:
-        list_configs()
-        return
+        parser.print_help()
+        sys.exit(1)
 
     if len(arg_list) > 1:
-        raise "too many arguments!"
+        parser.print_help()
+        sys.exit(1)
 
     arg_name, arg = arg_list[0]
 
@@ -116,6 +124,9 @@ def main():
     elif arg_name == 'c':
         config_name = arg
         run_config(config_name)
+    elif arg_name == 'd':
+        config_name = arg
+        delete_config(config_name)
     elif arg_name == 'l':
         list_configs()
     else:
