@@ -7,9 +7,9 @@ import json
 import argparse
 
 
-CONFIG_DIR = "/home/pete/.config/screen_layouts"
+CONFIG_DIR = os.path.join(os.environ['HOME'], ".config", "screen_layouts")
 SHELL_PATH = "/usr/bin/sh"
-
+DATA_FILE = os.path.join(CONFIG_DIR, "data.json")
 
 def list_configs():
     configs = os.listdir(CONFIG_DIR)
@@ -19,22 +19,38 @@ def list_configs():
 
 def save_config(filename):
     file_path = os.path.join(CONFIG_DIR, filename)
-    if not os.path.exists(file_path):
-        return write_config(filename)
+    if os.path.exists(file_path):
+        while True:
+            overwrite_response = input(
+                f"A configuration with name {filename} already exists. overwrite?(y/n): ")
 
-    while True:
-        overwrite_response = input(
-            f"A configuration with name {filename} already exists. overwrite?(y/n): ")
+            if overwrite_response.lower == 'y':
+                return write_config(filename)
 
-        if overwrite_response in ['y', 'Y']:
-            return write_config(filename)
+            if overwrite_response.lower == 'n':
+                new_filename = input("new filename: ")
+                if new_filename == filename:
+                    continue
+                break
 
-        if overwrite_response in ['n', 'N']:
-            new_filename = input("new filename: ")
-            if new_filename == filename:
-                continue
-            return write_config(new_filename)
+    print(f"current configuration saved as {filename}")
+    return write_config(filename)
 
+def save_config_name_as_current(config_name):
+    config_path = os.path.join(CONFIG_DIR, config_name)
+    if not os.path.exists(config_path):
+        raise Exception(f'tried to save {config_name} as current, but {config_path} does not exist')
+
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            curr_data = json.loads(f.read())
+    else:
+        curr_data = {}
+
+    curr_data["current_config"] = config_name
+
+    with open(DATA_FILE, "w+") as f:
+        f.write(json.dumps(curr_data))
 
 def write_config(filename):
     commands = gen_output_pos_config_from_current_position()
@@ -50,14 +66,28 @@ def write_config(filename):
         f.write(script_contents)
 
     os.system(f'chmod +x {file_path}')
-    print(f"current configuration saved as {filename}")
 
 
 def run_config(config_name):
     script_path = os.path.join(CONFIG_DIR, config_name)
 
-    if not os.path.exists(script_path):
-        raise Exception("configuration {config_name} does not exist")
+    if config_name == "current":
+        try:
+            with open(DATA_FILE, "r") as f:
+                data = json.loads(f.read())
+            if 'current_config' in data:
+                current_script_path = os.path.join(CONFIG_DIR, data['current_config'])
+                if not os.path.exists(current_script_path):
+                    raise Exception(f'Configuration saved as current({current_script_path}) does not exist')
+                script_path = current_script_path
+            else:
+                raise Exception("No current config")
+        except FileNotFoundError:
+            raise Exception("No current config")
+    else:
+        if not os.path.exists(script_path):
+            raise Exception("configuration {config_name} does not exist")
+        save_config_name_as_current(config_name)
 
     os.system(script_path + " && echo \"success\"")
 
