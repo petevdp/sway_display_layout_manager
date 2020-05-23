@@ -18,20 +18,18 @@ def list_configs():
 
 
 def save_config(filename):
-    file_path = os.path.join(CONFIG_DIR, filename)
-    if os.path.exists(file_path):
-        while True:
+    while True:
+        file_path = os.path.join(CONFIG_DIR, filename)
+        if os.path.exists(file_path):
             overwrite_response = input(
                 f"A configuration with name {filename} already exists. overwrite?(y/n): ")
+            print(overwrite_response.lower())
 
-            if overwrite_response.lower == 'y':
-                return write_config(filename)
+            if overwrite_response.lower() == 'y':
+                break;
 
-            if overwrite_response.lower == 'n':
-                new_filename = input("new filename: ")
-                if new_filename == filename:
-                    continue
-                break
+            if overwrite_response.lower() == 'n':
+                filename = input("new config name: ")
 
     print(f"current configuration saved as {filename}")
     return write_config(filename)
